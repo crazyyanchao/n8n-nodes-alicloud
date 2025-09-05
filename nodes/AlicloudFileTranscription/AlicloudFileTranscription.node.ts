@@ -148,7 +148,7 @@ export class AlicloudFileTranscription implements INodeType {
 				name: 'taskJson',
 				type: 'json',
 				description: 'JSON format configuration for task parameters',
-				default: '{"file_link": "your_file_link",\n  "version": "4.0",\n  "enable_words": false,\n  "enable_sample_rate_adaptive": true\n}',
+				default: '{\n  "file_link": "your_file_link",\n  "version": "4.0",\n  "enable_words": false,\n  "enable_sample_rate_adaptive": true\n}',
 				displayOptions: {
 					show: {
 						operation: ['submit', 'transcribe'],
