@@ -43,7 +43,7 @@ export class AlicloudOssSignedUrl implements INodeType {
 		outputs: ['main'],
 		credentials: [
 			{
-				name: 'alicloudOssCredentialsApi',
+				name: 'alicloudCredentialsApi',
 				required: true,
 			},
 		],
