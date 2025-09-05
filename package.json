@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-alicloud-file-transcription",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "n8n custom node for Alicloud File Transcription",
   "keywords": [
     "n8n-community-node-package",
@@ -42,10 +42,12 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/AlicloudFileTranscriptionCredentialsApi.credentials.js"
+      "dist/credentials/AlicloudFileTranscriptionCredentialsApi.credentials.js",
+      "dist/credentials/AlicloudCredentialsApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/AlicloudFileTranscription/AlicloudFileTranscription.node.js"
+      "dist/nodes/AlicloudFileTranscription/AlicloudFileTranscription.node.js",
+      "dist/nodes/AlicloudSignedUrl/AlicloudSignedUrl.node.js"
     ]
   },
   "devDependencies": {
@@ -60,7 +62,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@alicloud/nls-filetrans-2018-08-17": "^1.0.0"
+    "@alicloud/nls-filetrans-2018-08-17": "^1.0.0",
+    "ali-oss": "^7.2.0"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
