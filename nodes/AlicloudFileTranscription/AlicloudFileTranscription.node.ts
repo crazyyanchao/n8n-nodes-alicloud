@@ -62,6 +62,22 @@ export class AlicloudFileTranscription implements INodeType {
 				description: 'Complete workflow includes task submission and automatic result polling',
 			},
 			{
+				displayName: 'Task Parameter Configuration Mode',
+				name: 'taskConfigMode',
+				type: 'options',
+				options: [
+					{ name: 'Simple Settings', value: 'individual' },
+					{ name: 'Advanced JSON', value: 'json' },
+				],
+				default: 'individual',
+				description: 'Choose how to configure transcription parameters',
+				displayOptions: {
+					show: {
+						operation: ['submit', 'transcribe'],
+					},
+				},
+			},
+			{
 				displayName: 'File Link',
 				name: 'fileLink',
 				type: 'string',
@@ -87,22 +103,6 @@ export class AlicloudFileTranscription implements INodeType {
 					},
 				},
 				required: true,
-			},
-			{
-				displayName: 'Task Parameter Configuration Mode',
-				name: 'taskConfigMode',
-				type: 'options',
-				options: [
-					{ name: 'Simple Settings', value: 'individual' },
-					{ name: 'Advanced JSON', value: 'json' },
-				],
-				default: 'individual',
-				description: 'Choose how to configure transcription parameters',
-				displayOptions: {
-					show: {
-						operation: ['submit', 'transcribe'],
-					},
-				},
 			},
 			{
 				displayName: 'Version',
