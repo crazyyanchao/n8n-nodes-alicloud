@@ -70,7 +70,7 @@ export class AlicloudFileTranscription implements INodeType {
 					{ name: 'Advanced JSON', value: 'json' },
 				],
 				default: 'individual',
-				description: 'Choose how to configure transcription parameters.[More details](https://help.aliyun.com/document_detail/90727.html)',
+				description: 'Choose how to configure transcription parameters. For more details, see: https://help.aliyun.com/zh/isi/developer-reference/api-reference-2.',
 				displayOptions: {
 					show: {
 						operation: ['submit', 'transcribe'],
