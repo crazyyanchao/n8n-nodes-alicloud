@@ -34,7 +34,7 @@ export class AlicloudFileTranscription implements INodeType {
 		icon: 'file:./alicloud-file-transcription.logo.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Complete file transcription workflow using Alibaba Cloud NLS File Transcription service. Automatically handles task submission and result polling.',
+		description: 'Operate Alibaba Cloud File Transcription within n8n workflows (ali-nls-filetrans SDK).',
 		defaults: {
 			name: 'Alicloud File Transcription',
 		},
@@ -70,6 +70,7 @@ export class AlicloudFileTranscription implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['submit', 'transcribe'],
+						taskConfigMode: ['individual'],
 					},
 				},
 				required: true,
@@ -92,8 +93,8 @@ export class AlicloudFileTranscription implements INodeType {
 				name: 'taskConfigMode',
 				type: 'options',
 				options: [
-					{ name: 'Simple Settings (Recommended)', value: 'individual' },
-					{ name: 'Advanced JSON Configuration', value: 'json' },
+					{ name: 'Simple Settings', value: 'individual' },
+					{ name: 'Advanced JSON', value: 'json' },
 				],
 				default: 'individual',
 				description: 'Choose how to configure transcription parameters',
