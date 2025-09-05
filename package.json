@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-alicloud-file-transcription",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "n8n custom node for Alicloud File Transcription",
   "keywords": [
     "n8n-community-node-package",
@@ -47,7 +47,7 @@
     ],
     "nodes": [
       "dist/nodes/AlicloudFileTranscription/AlicloudFileTranscription.node.js",
-      "dist/nodes/AlicloudSignedUrl/AlicloudSignedUrl.node.js"
+      "dist/nodes/AlicloudOssSignedUrl/AlicloudOssSignedUrl.node.js"
     ]
   },
   "devDependencies": {
