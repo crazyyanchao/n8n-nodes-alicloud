@@ -148,7 +148,7 @@ export class AlicloudOssSignedUrl implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		const credentials = (await this.getCredentials('alicloudOssCredentialsApi')) as {
+		const credentials = (await this.getCredentials('alicloudCredentialsApi')) as {
 			accessKeyId: string;
 			accessKeySecret: string;
 		};
