@@ -210,14 +210,16 @@ export class AlicloudFileTranscription implements INodeType {
 			try {
 				if (operation === 'submit') {
 					/* --------------------------- Submit Transcription Task --------------------------- */
-					const fileLink = this.getNodeParameter('fileLink', i) as string;
 					const taskConfigMode = this.getNodeParameter('taskConfigMode', i) as string;
 
 					let task: any;
 					if (taskConfigMode === 'json') {
 						const taskJson = this.getNodeParameter('taskJson', i) as string;
 						task = JSON.parse(taskJson);
+						// Ensure appkey is set from credentials
+						task.appkey = credentials.appKey;
 					} else {
+						const fileLink = this.getNodeParameter('fileLink', i) as string;
 						const version = this.getNodeParameter('version', i) as string;
 						const enableWords = this.getNodeParameter('enableWords', i) as boolean;
 						const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', i) as boolean;
@@ -266,7 +268,6 @@ export class AlicloudFileTranscription implements INodeType {
 
 				} else if (operation === 'transcribe') {
 					/* --------------------------- Complete Transcription Workflow --------------------------- */
-					const fileLink = this.getNodeParameter('fileLink', i) as string;
 					const taskConfigMode = this.getNodeParameter('taskConfigMode', i) as string;
 					const pollInterval = this.getNodeParameter('pollInterval', i) as number;
 					const maxPollCount = this.getNodeParameter('maxPollCount', i) as number;
@@ -275,7 +276,10 @@ export class AlicloudFileTranscription implements INodeType {
 					if (taskConfigMode === 'json') {
 						const taskJson = this.getNodeParameter('taskJson', i) as string;
 						task = JSON.parse(taskJson);
+						// Ensure appkey is set from credentials
+						task.appkey = credentials.appKey;
 					} else {
+						const fileLink = this.getNodeParameter('fileLink', i) as string;
 						const version = this.getNodeParameter('version', i) as string;
 						const enableWords = this.getNodeParameter('enableWords', i) as boolean;
 						const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', i) as boolean;
