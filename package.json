@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-alicloud-file-transcription",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "n8n custom node for Alicloud File Transcription",
   "keywords": [
     "n8n-community-node-package",
@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "@alicloud/nls-filetrans-2018-08-17": "^1.0.0",
-    "ali-oss": "^7.2.0"
+    "ali-oss": "^6.23.0"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
