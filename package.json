@@ -1,22 +1,31 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-alicloud-file-transcription",
   "version": "0.1.0",
-  "description": "",
+  "description": "n8n custom node for Alicloud File Transcription",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "n8n",
+    "n8n-community-node",
+    "alicloud",
+    "Alicloud",
+    "file-transcription",
+    "alicloud-file-transcription"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Tony.Ma",
+    "email": "yanchaoma@foxmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription.git"
+  },
+  "bugs": {
+    "url": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription/issues"
   },
   "engines": {
-    "node": ">=20.15"
+    "node": ">=22.16"
   },
   "main": "index.js",
   "scripts": {
@@ -33,21 +42,25 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/AlicloudFileTranscriptionCredentialsApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/AlicloudFileTranscription/AlicloudFileTranscription.node.js"
     ]
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "~8.32.0",
-    "eslint": "^8.57.0",
+    "@types/node": "^24.2.1",
+    "@typescript-eslint/parser": "~8.36",
+    "eslint": "^8.57.1",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
-    "gulp": "^5.0.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.2"
+    "gulp": "^5.0.1",
+    "n8n-workflow": "1.103.0",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@alicloud/nls-filetrans-2018-08-17": "^1.0.0"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
