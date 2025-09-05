@@ -148,7 +148,7 @@ export class AlicloudFileTranscription implements INodeType {
 				name: 'taskJson',
 				type: 'json',
 				description: 'JSON format configuration for task parameters',
-				default: '{\n  "appkey": "={{ $credentials.alicloudFileTranscriptionApi.appKey }}",\n  "file_link": "your_file_link",\n  "version": "4.0",\n  "enable_words": false,\n  "enable_sample_rate_adaptive": true\n}',
+				default: '{"file_link": "your_file_link",\n  "version": "4.0",\n  "enable_words": false,\n  "enable_sample_rate_adaptive": true\n}',
 				displayOptions: {
 					show: {
 						operation: ['submit', 'transcribe'],
@@ -217,10 +217,6 @@ export class AlicloudFileTranscription implements INodeType {
 					if (taskConfigMode === 'json') {
 						const taskJson = this.getNodeParameter('taskJson', i) as string;
 						task = JSON.parse(taskJson);
-						// 确保 appkey 从 credential 中获取
-						if (!task.appkey || task.appkey === 'your_app_key' || task.appkey.includes('$credentials')) {
-							task.appkey = credentials.appKey;
-						}
 					} else {
 						const version = this.getNodeParameter('version', i) as string;
 						const enableWords = this.getNodeParameter('enableWords', i) as boolean;
@@ -279,10 +275,6 @@ export class AlicloudFileTranscription implements INodeType {
 					if (taskConfigMode === 'json') {
 						const taskJson = this.getNodeParameter('taskJson', i) as string;
 						task = JSON.parse(taskJson);
-						// 确保 appkey 从 credential 中获取
-						if (!task.appkey || task.appkey === 'your_app_key' || task.appkey.includes('$credentials')) {
-							task.appkey = credentials.appKey;
-						}
 					} else {
 						const version = this.getNodeParameter('version', i) as string;
 						const enableWords = this.getNodeParameter('enableWords', i) as boolean;
