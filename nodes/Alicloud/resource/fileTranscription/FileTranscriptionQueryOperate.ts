@@ -34,12 +34,14 @@ const FileTranscriptionQueryOperate: ResourceOperations = {
 	],
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
 		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
-		const apiVersion = this.getNodeParameter('fileTranscriptionApiVersion', index) as string;
 		const taskId = this.getNodeParameter('taskId', index) as string;
 
 		const response = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
 			method: 'GET',
-			url: `${endpoint}/v${apiVersion}/transcription/${taskId}`,
+			url: `${endpoint}`,
+			qs: {
+				TaskId: taskId,
+			},
 		});
 
 		return {

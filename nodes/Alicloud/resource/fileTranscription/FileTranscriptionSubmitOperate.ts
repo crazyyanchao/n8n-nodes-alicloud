@@ -50,7 +50,7 @@ const FileTranscriptionSubmitOperate: ResourceOperations = {
 			name: 'fileLink',
 			type: 'string',
 			description: 'Audio file link address to transcribe',
-			default: '',
+			default: 'https://gw.alipayobjects.com/os/bmw-prod/0574ee2e-f494-45a5-820f-63aee583045a.wav',
 			displayOptions: {
 				show: {
 					taskConfigMode: ['individual'],
@@ -110,7 +110,6 @@ const FileTranscriptionSubmitOperate: ResourceOperations = {
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
 		const appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
 		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
-		const apiVersion = this.getNodeParameter('fileTranscriptionApiVersion', index) as string;
 		const taskConfigMode = this.getNodeParameter('taskConfigMode', index) as string;
 
 		let taskParams: IDataObject;
@@ -143,7 +142,7 @@ const FileTranscriptionSubmitOperate: ResourceOperations = {
 
 		const response = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
 			method: 'POST',
-			url: `${endpoint}/v${apiVersion}/transcription`,
+			url: `${endpoint}`,
 			body: submitBody,
 		});
 

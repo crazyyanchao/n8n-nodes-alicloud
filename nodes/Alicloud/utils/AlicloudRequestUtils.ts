@@ -50,11 +50,34 @@ class AlicloudRequestUtils {
 			'X-NLS-Token': credentials.accessKeyId,
 		};
 
-		return this.helpers.requestWithAuthentication.call(
-			this,
-			'alicloudCredentialsApi',
-			options
-		);
+		try {
+			const response = await this.helpers.requestWithAuthentication.call(
+				this,
+				'alicloudCredentialsApi',
+				options
+			);
+
+			// Check for errors in Alibaba Cloud API response
+			if (response && typeof response === 'object') {
+				if (response.Code && response.Code !== 'Success') {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Alibaba Cloud API error: ${response.Code} - ${response.Message || 'Unknown error'}`
+					);
+				}
+			}
+
+			return response;
+		} catch (error) {
+			if (error instanceof NodeOperationError) {
+				throw error;
+			}
+
+			throw new NodeOperationError(
+				this.getNode(),
+				`Request failed: ${error.message}`
+			);
+		}
 	}
 }
 

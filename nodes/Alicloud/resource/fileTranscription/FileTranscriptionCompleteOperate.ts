@@ -50,7 +50,7 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 			name: 'fileLink',
 			type: 'string',
 			description: 'Audio file link address to transcribe',
-			default: '',
+			default: 'https://gw.alipayobjects.com/os/bmw-prod/0574ee2e-f494-45a5-820f-63aee583045a.wav',
 			displayOptions: {
 				show: {
 					taskConfigMode: ['individual'],
@@ -124,7 +124,6 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
 		const appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
 		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
-		const apiVersion = this.getNodeParameter('fileTranscriptionApiVersion', index) as string;
 		const taskConfigMode = this.getNodeParameter('taskConfigMode', index) as string;
 		const pollInterval = this.getNodeParameter('pollInterval', index) as number;
 		const maxPollCount = this.getNodeParameter('maxPollCount', index) as number;
@@ -160,7 +159,7 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 
 		const submitResponse = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
 			method: 'POST',
-			url: `${endpoint}/v${apiVersion}/transcription`,
+			url: `${endpoint}`,
 			body: submitBody,
 		});
 
@@ -177,7 +176,10 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 
 			const queryResponse = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
 				method: 'GET',
-				url: `${endpoint}/v${apiVersion}/transcription/${taskId}`,
+				url: `${endpoint}`,
+				qs: {
+					TaskId: taskId,
+				},
 			});
 
 			if (queryResponse.StatusText === 'SUCCESS') {
