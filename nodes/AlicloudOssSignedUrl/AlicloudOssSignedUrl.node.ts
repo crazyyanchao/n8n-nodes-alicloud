@@ -212,7 +212,7 @@ export class AlicloudOssSignedUrl implements INodeType {
 				}
 
 				// Generate signed URL
-				const signedUrl = client.signUrl(objectKey, {
+				const signedUrl = client.signatureUrl(objectKey, {
 					method,
 					expires,
 					headers: Object.keys(headers).length > 0 ? headers : undefined,

@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-alicloud-file-transcription",
   "version": "0.1.14",
-  "description": "n8n custom node for Alicloud File Transcription",
+  "description": "n8n custom node for Alicloud Services (File Transcription & OSS Signed URL)",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -9,7 +9,9 @@
     "alicloud",
     "Alicloud",
     "file-transcription",
-    "alicloud-file-transcription"
+    "alicloud-file-transcription",
+    "oss",
+    "signed-url"
   ],
   "license": "MIT",
   "homepage": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription",
@@ -47,7 +49,8 @@
     ],
     "nodes": [
       "dist/nodes/AlicloudFileTranscription/AlicloudFileTranscription.node.js",
-      "dist/nodes/AlicloudOssSignedUrl/AlicloudOssSignedUrl.node.js"
+      "dist/nodes/AlicloudOssSignedUrl/AlicloudOssSignedUrl.node.js",
+      "dist/nodes/Alicloud/Alicloud.node.js"
     ]
   },
   "devDependencies": {
