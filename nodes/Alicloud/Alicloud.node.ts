@@ -47,14 +47,14 @@ ModuleLoadUtils.loadModules(__dirname, 'resource/*.js').forEach((resource) => {
  * ---------------------------------------------------------------- */
 export class Alicloud implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Alicloud Services',
+		displayName: 'Alicloud',
 		name: 'alicloud',
 		icon: 'file:./alicloud.logo.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Operate Alibaba Cloud services within n8n workflows (File Transcription, OSS Operations, ECS Instances).',
+		description: 'Operate Alibaba Cloud within n8n workflows.',
 		defaults: {
-			name: 'Alicloud Services',
+			name: 'Alicloud',
 		},
 		inputs: ['main'],
 		outputs: ['main'],
