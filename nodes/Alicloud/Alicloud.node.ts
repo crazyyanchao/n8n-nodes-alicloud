@@ -23,10 +23,11 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-// @ts-ignore
-import Client from '@alicloud/nls-filetrans-2018-08-17';
-// @ts-ignore
-import OSS from 'ali-oss';
+// 导入功能模块
+import { FileTranscriptionModule } from '../modules/FileTranscription';
+import { OssModule } from '../modules/Oss';
+import { OssSignedUrlModule } from '../modules/OssSignedUrl';
+import { EcsModule } from '../modules/Ecs';
 
 /* -------------------------------------------------------------------
  * Node Implementation
@@ -38,7 +39,7 @@ export class Alicloud implements INodeType {
 		icon: 'file:./alicloud.logo.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Operate Alibaba Cloud services within n8n workflows (File Transcription & OSS Signed URL).',
+		description: 'Operate Alibaba Cloud services within n8n workflows (File Transcription, OSS Operations, ECS Instances).',
 		defaults: {
 			name: 'Alicloud Services',
 		},
@@ -46,12 +47,8 @@ export class Alicloud implements INodeType {
 		outputs: ['main'],
 		credentials: [
 			{
-				name: 'alicloudFileTranscriptionApi',
-				required: false,
-			},
-			{
 				name: 'alicloudCredentialsApi',
-				required: false,
+				required: true,
 			},
 		],
 		properties: [
@@ -68,10 +65,22 @@ export class Alicloud implements INodeType {
 						description: 'File transcription operations (complete workflow, submit task, query result)',
 					},
 					{
-						name: 'OSS Signed Actions',
-						value: 'ossSignedActions',
-						action: 'Oss signed url generation operations',
-						description: 'OSS signed URL generation operations',
+						name: 'OSS Actions',
+						value: 'ossActions',
+						action: 'Oss operations upload download list delete signed url',
+						description: 'OSS operations (upload, download, list, delete, signed URL)',
+					},
+					{
+						name: 'ECS Instances',
+						value: 'ecsInstances',
+						action: 'Ecs instance management operations',
+						description: 'ECS instance management operations',
+					},
+					{
+						name: 'OSS Signed URL',
+						value: 'ossSignedUrl',
+						action: 'Generate OSS signed URL',
+						description: 'Generate signed URLs for OSS objects',
 					},
 				],
 				default: 'fileTranscriptionActions',
@@ -95,22 +104,82 @@ export class Alicloud implements INodeType {
 				description: 'Select the specific file transcription operation',
 			},
 			{
-				displayName: 'OSS Signed Operation',
-				name: 'ossSignedOperation',
+				displayName: 'OSS Operation',
+				name: 'ossOperation',
 				type: 'options',
 				options: [
-					{ name: 'Generate Signed URL', value: 'generate' },
+					{ name: 'Upload', value: 'upload' },
+					{ name: 'Download', value: 'download' },
+					{ name: 'List Objects', value: 'list' },
+					{ name: 'Delete', value: 'delete' },
 				],
-				default: 'generate',
+				default: 'upload',
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossActions'],
 					},
 				},
-				description: 'Select the specific OSS signed operation',
+				description: 'Select the specific OSS operation',
+			},
+			{
+				displayName: 'ECS Operation',
+				name: 'ecsOperation',
+				type: 'options',
+				options: [
+					{ name: 'Describe Instances', value: 'describeInstances' },
+				],
+				default: 'describeInstances',
+				displayOptions: {
+					show: {
+						action: ['ecsInstances'],
+					},
+				},
+				description: 'Select the specific ECS operation',
 			},
 
-			/* ------------------------------ File Transcription Parameters ------------------------------ */
+			/* ------------------------------ File Transcription Configuration ------------------------------ */
+			{
+				displayName: 'File Transcription AppKey',
+				name: 'fileTranscriptionAppKey',
+				type: 'string',
+				typeOptions: {
+					password: true,
+				},
+				default: '',
+				description: 'Intelligent Speech Service project AppKey (required for file transcription). Get it from: https://nls-portal.console.aliyun.com/applist.',
+				displayOptions: {
+					show: {
+						action: ['fileTranscriptionActions'],
+					},
+				},
+				required: true,
+			},
+			{
+				displayName: 'File Transcription Endpoint',
+				name: 'fileTranscriptionEndpoint',
+				type: 'string',
+				default: 'http://filetrans.cn-beijing.aliyuncs.com',
+				description: 'File transcription service endpoint address',
+				displayOptions: {
+					show: {
+						action: ['fileTranscriptionActions'],
+					},
+				},
+				required: true,
+			},
+			{
+				displayName: 'File Transcription API Version',
+				name: 'fileTranscriptionApiVersion',
+				type: 'string',
+				default: '2018-08-17',
+				description: 'File transcription API version number',
+				displayOptions: {
+					show: {
+						action: ['fileTranscriptionActions'],
+					},
+				},
+				required: true,
+			},
 			{
 				displayName: 'Task Parameter Configuration Mode',
 				name: 'taskConfigMode',
@@ -207,7 +276,8 @@ export class Alicloud implements INodeType {
 				default: '{\n  "file_link": "your_file_link",\n  "version": "4.0",\n  "enable_words": false,\n  "enable_sample_rate_adaptive": true\n}',
 				displayOptions: {
 					show: {
-						action: ['fileTranscriptionSubmit', 'fileTranscriptionComplete'],
+						action: ['fileTranscriptionActions'],
+						fileTranscriptionOperation: ['submit', 'complete'],
 						taskConfigMode: ['json'],
 					},
 				},
@@ -239,45 +309,44 @@ export class Alicloud implements INodeType {
 				},
 			},
 
-			/* ------------------------------ OSS Signed URL Parameters ------------------------------ */
+			/* ------------------------------ OSS Configuration ------------------------------ */
 			{
-				displayName: 'Endpoint',
-				name: 'endpoint',
+				displayName: 'OSS Region',
+				name: 'ossRegion',
 				type: 'string',
-				description: 'Alibaba Cloud service endpoint address (e.g., OSS endpoint)',
-				default: 'https://oss-cn-beijing-internal.aliyuncs.com',
+				default: 'oss-cn-beijing',
+				description: 'OSS region endpoint (e.g., oss-cn-hongkong, oss-cn-beijing)',
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossActions', 'ossSignedUrl'],
 					},
 				},
 				required: true,
 			},
 			{
-				displayName: 'Region',
-				name: 'region',
+				displayName: 'OSS Bucket Name',
+				name: 'ossBucket',
 				type: 'string',
-				description: 'Alibaba Cloud region identifier',
-				default: 'cn-beijing',
-				displayOptions: {
-					show: {
-						action: ['ossSignedActions'],
-					},
-				},
-				required: true,
-			},
-			{
-				displayName: 'Bucket Name',
-				name: 'bucketName',
-				type: 'string',
-				description: 'The name of the OSS bucket',
 				default: '',
+				description: 'Name of the OSS bucket to operate on',
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossActions', 'ossSignedUrl'],
 					},
 				},
 				required: true,
+			},
+			{
+				displayName: 'OSS Custom Endpoint',
+				name: 'ossEndpoint',
+				type: 'string',
+				default: '',
+				description: 'Optional custom OSS endpoint URL (overrides region-based endpoint)',
+				displayOptions: {
+					show: {
+						action: ['ossActions', 'ossSignedUrl'],
+					},
+				},
 			},
 			{
 				displayName: 'Object Key',
@@ -287,19 +356,61 @@ export class Alicloud implements INodeType {
 				default: '',
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossActions'],
+						ossOperation: ['upload', 'download', 'delete'],
+					},
+				},
+				required: true,
+			},
+			{
+				displayName: 'Binary Property',
+				name: 'binaryPropertyName',
+				type: 'string',
+				description: 'Binary property name for upload / download',
+				default: 'data',
+				displayOptions: {
+					show: {
+						action: ['ossActions'],
+						ossOperation: ['upload', 'download'],
+					},
+				},
+				required: true,
+			},
+			{
+				displayName: 'Prefix',
+				name: 'prefix',
+				type: 'string',
+				description: 'Prefix filter when listing objects',
+				default: '',
+				displayOptions: {
+					show: {
+						action: ['ossActions'],
+						ossOperation: ['list'],
+					},
+				},
+			},
+
+			/* ------------------------------ OSS Signed URL Parameters ------------------------------ */
+			{
+				displayName: 'Object Key',
+				name: 'signedUrlObjectKey',
+				type: 'string',
+				description: 'The key (path) of the object in the bucket (e.g., path/to/file.jpg)',
+				default: '',
+				displayOptions: {
+					show: {
+						action: ['ossSignedUrl'],
 					},
 				},
 				required: true,
 			},
 			{
 				displayName: 'HTTP Method',
-				name: 'method',
+				name: 'signedUrlMethod',
 				type: 'options',
 				options: [
 					{ name: 'DELETE', value: 'DELETE' },
 					{ name: 'GET', value: 'GET' },
-					{ name: 'HEAD', value: 'HEAD' },
 					{ name: 'POST', value: 'POST' },
 					{ name: 'PUT', value: 'PUT' },
 				],
@@ -307,32 +418,32 @@ export class Alicloud implements INodeType {
 				description: 'HTTP method for the signed URL',
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossSignedUrl'],
 					},
 				},
 			},
 			{
 				displayName: 'Expires (Seconds)',
-				name: 'expires',
+				name: 'signedUrlExpires',
 				type: 'number',
 				description: 'URL expiration time in seconds',
 				default: 3600,
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossSignedUrl'],
 					},
 				},
 				required: true,
 			},
 			{
 				displayName: 'Additional Options',
-				name: 'additionalOptions',
+				name: 'signedUrlAdditionalOptions',
 				type: 'collection',
 				placeholder: 'Add Option',
 				default: {},
 				displayOptions: {
 					show: {
-						action: ['ossSignedActions'],
+						action: ['ossSignedUrl'],
 					},
 				},
 				options: [
@@ -366,6 +477,189 @@ export class Alicloud implements INodeType {
 					},
 				],
 			},
+
+			/* ------------------------------ ECS Configuration ------------------------------ */
+			{
+				displayName: 'ECS Region',
+				name: 'ecsRegion',
+				type: 'string',
+				default: 'cn-beijing',
+				description: 'ECS region ID for ECS operations',
+				displayOptions: {
+					show: {
+						action: ['ecsInstances'],
+					},
+				},
+				required: true,
+			},
+			{
+				displayName: 'Additional Fields',
+				name: 'additionalFields',
+				type: 'collection',
+				placeholder: 'Add Field',
+				default: {},
+				displayOptions: {
+					show: {
+						action: ['ecsInstances'],
+						ecsOperation: ['describeInstances'],
+					},
+				},
+				options: [
+					{
+						displayName: 'InstanceChargeType',
+						name: 'instanceChargeType',
+						type: 'options',
+						default: 'PostPaid',
+						options: [
+							{
+								name: 'PrePaid',
+								value: 'PrePaid',
+								description: '包年包月',
+							},
+							{
+								name: 'PostPaid',
+								value: 'PostPaid',
+								description: '按量付费',
+							},
+						],
+						description: '实例的付费方式。',
+					},
+					{
+						displayName: 'InstanceIds',
+						name: 'instanceIds',
+						type: 'string',
+						default: '',
+						description:
+							'实例ID。取值可以由多个实例ID组成一个JSON数组，最多支持100个ID，ID之间用半角逗号（,）隔开。',
+					},
+					{
+						displayName: 'InstanceName',
+						name: 'instanceName',
+						type: 'string',
+						default: '',
+						description: '实例名称，支持使用通配符*进行模糊搜索。',
+					},
+					{
+						displayName: 'InstanceType',
+						name: 'instanceType',
+						type: 'string',
+						default: '',
+						description: '实例规格。',
+					},
+					{
+						displayName: 'InstanceTypeFamily',
+						name: 'instanceTypeFamily',
+						type: 'string',
+						default: '',
+						description: '实例规格族。',
+					},
+					{
+						displayName: 'KeyPairName',
+						name: 'keyPairName',
+						type: 'string',
+						default: '',
+						description: '密钥对名称。',
+					},
+					{
+						displayName: 'PageNumber',
+						name: 'pageNumber',
+						type: 'number',
+						default: 1,
+						description: '查询结果的页码。起始值：1。默认值：1。',
+					},
+					{
+						displayName: 'PageSize',
+						name: 'pageSize',
+						type: 'number',
+						default: 10,
+						description: '分页查询时设置的每页行数。最大值：100。默认值：10。',
+					},
+					{
+						displayName: 'PrivateIpAddresses',
+						name: 'privateIpAddresses',
+						type: 'string',
+						default: '',
+						description:
+							'实例的私网IP地址列表。当InstanceNetworkType=vpc时，您可以指定实例的私网IP。当您指定的私网IP地址数量小于实例数量时，系统将自动分配私网IP地址。',
+					},
+					{
+						displayName: 'PublicIpAddresses',
+						name: 'publicIpAddresses',
+						type: 'string',
+						default: '',
+						description: '实例的公网IP地址列表。',
+					},
+					{
+						displayName: 'SecurityGroupId',
+						name: 'securityGroupId',
+						type: 'string',
+						default: '',
+						description: '安全组ID。',
+					},
+					{
+						displayName: 'Status',
+						name: 'status',
+						type: 'options',
+						default: 'Running',
+						options: [
+							{
+								name: 'Pending',
+								value: 'Pending',
+								description: '创建中',
+							},
+							{
+								name: 'Running',
+								value: 'Running',
+								description: '运行中',
+							},
+							{
+								name: 'Starting',
+								value: 'Starting',
+								description: '启动中',
+							},
+							{
+								name: 'Stopped',
+								value: 'Stopped',
+								description: '已停止',
+							},
+							{
+								name: 'Stopping',
+								value: 'Stopping',
+								description: '停止中',
+							},
+						],
+						description: '实例状态。',
+					},
+					{
+						displayName: 'Tag',
+						name: 'tags',
+						type: 'string',
+						default: '',
+						description: '实例的标签。格式：[{"Key": "TagKey", "Value": "TagValue"}, ...]。',
+					},
+					{
+						displayName: 'VpcId',
+						name: 'vpcId',
+						type: 'string',
+						default: '',
+						description: '专有网络VPC ID。',
+					},
+					{
+						displayName: 'VSwitchId',
+						name: 'vSwitchId',
+						type: 'string',
+						default: '',
+						description: '虚拟交换机ID。',
+					},
+					{
+						displayName: 'ZoneId',
+						name: 'zoneId',
+						type: 'string',
+						default: '',
+						description: '可用区ID。',
+					},
+				],
+			},
 		],
 	};
 
@@ -378,294 +672,49 @@ export class Alicloud implements INodeType {
 			const action = this.getNodeParameter('action', i) as string;
 
 			try {
-				if (action === 'fileTranscriptionActions') {
-					/* --------------------------- File Transcription Actions --------------------------- */
-					const credentials = (await this.getCredentials('alicloudFileTranscriptionApi')) as {
-						accessKeyId: string;
-						accessKeySecret: string;
-						appKey: string;
-						endpoint: string;
-						apiVersion: string;
-					};
+				let result: INodeExecutionData;
 
-					// Create Alibaba Cloud file transcription client
-					const client = new Client({
-						accessKeyId: credentials.accessKeyId,
-						secretAccessKey: credentials.accessKeySecret,
-						endpoint: credentials.endpoint,
-						apiVersion: credentials.apiVersion,
-					});
+				switch (action) {
+					case 'fileTranscriptionActions':
+						/* --------------------------- File Transcription Actions --------------------------- */
+						const fileTranscriptionModule = new FileTranscriptionModule(this);
+						result = await fileTranscriptionModule.execute(i);
+						break;
 
-					const fileTranscriptionOperation = this.getNodeParameter('fileTranscriptionOperation', i) as string;
+					case 'ossActions':
+						/* --------------------------- OSS Actions --------------------------- */
+						const ossModule = new OssModule(this);
+						result = await ossModule.execute(i);
+						break;
 
-					if (fileTranscriptionOperation === 'submit') {
-						/* --------------------------- Submit Transcription Task --------------------------- */
-						const taskConfigMode = this.getNodeParameter('taskConfigMode', i) as string;
+					case 'ossSignedUrl':
+						/* --------------------------- OSS Signed URL --------------------------- */
+						const ossSignedUrlModule = new OssSignedUrlModule(this);
+						result = await ossSignedUrlModule.execute(i);
+						break;
 
-						let task: any;
-						if (taskConfigMode === 'json') {
-							const taskJson = this.getNodeParameter('taskJson', i) as string;
-							task = JSON.parse(taskJson);
-							// Ensure appkey is set from credentials
-							task.appkey = credentials.appKey;
-						} else {
-							const fileLink = this.getNodeParameter('fileLink', i) as string;
-							const version = this.getNodeParameter('version', i) as string;
-							const enableWords = this.getNodeParameter('enableWords', i) as boolean;
-							const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', i) as boolean;
+					case 'ecsInstances':
+						/* --------------------------- ECS Instances --------------------------- */
+						const ecsModule = new EcsModule(this);
+						result = await ecsModule.execute(i);
+						break;
 
-							task = {
-								appkey: credentials.appKey,
-								file_link: fileLink,
-								version: version,
-								enable_words: enableWords,
-								enable_sample_rate_adaptive: enableSampleRateAdaptive,
-							};
-						}
-
-						const taskParams = {
-							Task: JSON.stringify(task),
-						};
-
-						const response = await client.submitTask(taskParams, { method: 'POST' });
-						returnData.push({
-							json: {
-								success: response.StatusText === 'SUCCESS',
-								statusText: response.StatusText,
-								taskId: response.TaskId,
-								response: response
-							}
-						});
-
-					} else if (fileTranscriptionOperation === 'query') {
-						/* --------------------------- Query Transcription Result --------------------------- */
-						const taskId = this.getNodeParameter('taskId', i) as string;
-
-						const taskIdParams = {
-							TaskId: taskId,
-						};
-
-						const response = await client.getTaskResult(taskIdParams);
-						returnData.push({
-							json: {
-								success: response.StatusText === 'SUCCESS' || response.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT',
-								statusText: response.StatusText,
-								taskId: taskId,
-								result: response.Result,
-								response: response
-							}
-						});
-
-					} else if (fileTranscriptionOperation === 'complete') {
-						/* --------------------------- Complete Transcription Workflow --------------------------- */
-						const taskConfigMode = this.getNodeParameter('taskConfigMode', i) as string;
-						const pollInterval = this.getNodeParameter('pollInterval', i) as number;
-						const maxPollCount = this.getNodeParameter('maxPollCount', i) as number;
-
-						let task: any;
-						if (taskConfigMode === 'json') {
-							const taskJson = this.getNodeParameter('taskJson', i) as string;
-							task = JSON.parse(taskJson);
-							// Ensure appkey is set from credentials
-							task.appkey = credentials.appKey;
-						} else {
-							const fileLink = this.getNodeParameter('fileLink', i) as string;
-							const version = this.getNodeParameter('version', i) as string;
-							const enableWords = this.getNodeParameter('enableWords', i) as boolean;
-							const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', i) as boolean;
-
-							task = {
-								appkey: credentials.appKey,
-								file_link: fileLink,
-								version: version,
-								enable_words: enableWords,
-								enable_sample_rate_adaptive: enableSampleRateAdaptive,
-							};
-						}
-
-						// Submit task
-						const taskParams = {
-							Task: JSON.stringify(task),
-						};
-
-						const submitResponse = await client.submitTask(taskParams, { method: 'POST' });
-
-						if (submitResponse.StatusText !== 'SUCCESS') {
-							returnData.push({
-								json: {
-									success: false,
-									error: 'Failed to submit transcription task',
-									statusText: submitResponse.StatusText,
-									response: submitResponse
-								}
-							});
-							continue;
-						}
-
-						const taskId = submitResponse.TaskId;
-
-						// Poll query results using Promise-based approach similar to official SDK
-						let pollCount = 0;
-						let finalResult: any = null;
-
-						const pollForResult = async (): Promise<any> => {
-							return new Promise((resolve, reject) => {
-								const pollTimer = setInterval(async () => {
-									try {
-										const taskIdParams = {
-											TaskId: taskId,
-										};
-
-										const queryResponse = await client.getTaskResult(taskIdParams);
-										pollCount++;
-
-										if (queryResponse.StatusText === 'SUCCESS' || queryResponse.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT') {
-											clearInterval(pollTimer);
-											resolve(queryResponse);
-										} else if (queryResponse.StatusText === 'RUNNING' || queryResponse.StatusText === 'QUEUEING') {
-											// Continue polling
-											if (pollCount >= maxPollCount) {
-												clearInterval(pollTimer);
-												reject(new Error('Polling timeout: Maximum polling count reached'));
-											}
-										} else {
-											// Task failed
-											clearInterval(pollTimer);
-											resolve(queryResponse);
-										}
-									} catch (error) {
-										clearInterval(pollTimer);
-										reject(error);
-									}
-								}, pollInterval);
-							});
-						};
-
-						try {
-							finalResult = await pollForResult();
-						} catch (error) {
-							returnData.push({
-								json: {
-									success: false,
-									error: (error as Error).message,
-									taskId: taskId,
-									pollCount: pollCount
-								}
-							});
-							continue;
-						}
-
-						// Return the final result
-						returnData.push({
-							json: {
-								success: finalResult.StatusText === 'SUCCESS' || finalResult.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT',
-								statusText: finalResult.StatusText,
-								taskId: taskId,
-								result: finalResult.Result,
-								pollCount: pollCount,
-								response: finalResult
-							}
-						});
-					}
-
-				} else if (action === 'ossSignedActions') {
-					/* --------------------------- OSS Signed URL Generation --------------------------- */
-					const credentials = (await this.getCredentials('alicloudCredentialsApi')) as {
-						accessKeyId: string;
-						accessKeySecret: string;
-					};
-
-					const endpoint = this.getNodeParameter('endpoint', i) as string;
-					const region = this.getNodeParameter('region', i) as string;
-					const bucketName = this.getNodeParameter('bucketName', i) as string;
-					const objectKey = this.getNodeParameter('objectKey', i) as string;
-					const method = this.getNodeParameter('method', i) as string;
-					const expires = this.getNodeParameter('expires', i) as number;
-					const additionalOptions = this.getNodeParameter('additionalOptions', i) as any;
-
-					// Create Alibaba Cloud OSS client
-					const client = new OSS({
-						accessKeyId: credentials.accessKeyId,
-						accessKeySecret: credentials.accessKeySecret,
-						endpoint: endpoint,
-						region: region,
-					});
-
-					// Parse additional options
-					let headers = {};
-					let params = {};
-					let slashSafe = false;
-					let additionalHeaders = {};
-
-					if (additionalOptions.headers) {
-						try {
-							headers = typeof additionalOptions.headers === 'string'
-								? JSON.parse(additionalOptions.headers)
-								: additionalOptions.headers;
-						} catch (error) {
-							throw new NodeOperationError(this.getNode(), 'Invalid headers JSON format');
-						}
-					}
-
-					if (additionalOptions.params) {
-						try {
-							params = typeof additionalOptions.params === 'string'
-								? JSON.parse(additionalOptions.params)
-								: additionalOptions.params;
-						} catch (error) {
-							throw new NodeOperationError(this.getNode(), 'Invalid params JSON format');
-						}
-					}
-
-					if (additionalOptions.slashSafe !== undefined) {
-						slashSafe = additionalOptions.slashSafe;
-					}
-
-					if (additionalOptions.additionalHeaders) {
-						try {
-							additionalHeaders = typeof additionalOptions.additionalHeaders === 'string'
-								? JSON.parse(additionalOptions.additionalHeaders)
-								: additionalOptions.additionalHeaders;
-						} catch (error) {
-							throw new NodeOperationError(this.getNode(), 'Invalid additionalHeaders JSON format');
-						}
-					}
-
-					// Generate signed URL
-					const signedUrl = client.signatureUrl(objectKey, {
-						method,
-						expires,
-						headers: Object.keys(headers).length > 0 ? headers : undefined,
-						params: Object.keys(params).length > 0 ? params : undefined,
-						slash_safe: slashSafe,
-						additional_headers: Object.keys(additionalHeaders).length > 0 ? additionalHeaders : undefined,
-					});
-
-					returnData.push({
-						json: {
-							success: true,
-							signedUrl: signedUrl,
-							endpoint: endpoint,
-							region: region,
-							bucketName: bucketName,
-							objectKey: objectKey,
-							method: method,
-							expires: expires,
-							expiresAt: new Date(Date.now() + expires * 1000).toISOString(),
-							options: {
-								headers,
-								params,
-								slashSafe,
-								additionalHeaders,
-							},
-						},
-					});
+					default:
+						throw new NodeOperationError(this.getNode(), `Unknown action: ${action}`);
 				}
+
+				returnData.push(result);
 
 			} catch (error) {
 				const errMsg = (error as Error).message;
 				if (this.continueOnFail()) {
-					returnData.push({ json: { error: errMsg } });
+					returnData.push({
+						json: {
+							success: false,
+							error: errMsg,
+							action: action
+						}
+					});
 					continue;
 				}
 				throw error;

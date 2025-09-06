@@ -15,7 +15,7 @@ export class AlicloudCredentialsApi implements ICredentialType {
 			type: 'string',
 			default: '',
 			required: true,
-			description: 'Alibaba Cloud AccessKey ID for general service authentication',
+			description: 'Alibaba Cloud AccessKey ID for all service authentication',
 		},
 		{
 			displayName: 'AccessKey Secret',
@@ -26,7 +26,7 @@ export class AlicloudCredentialsApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Alibaba Cloud AccessKey Secret for general service authentication',
+			description: 'Alibaba Cloud AccessKey Secret for all service authentication',
 		},
 	];
 }

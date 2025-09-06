@@ -1,4 +1,4 @@
-# n8n-nodes-alicloud-file-transcription
+# n8n-nodes-alicloud
 
 [![English](https://img.shields.io/badge/English-Click-yellow)](README.md)
 [![中文文档](https://img.shields.io/badge/中文文档-点击查看-orange)](README-zh.md)

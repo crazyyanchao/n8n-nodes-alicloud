@@ -1,7 +1,7 @@
 {
-  "name": "n8n-nodes-alicloud-file-transcription",
-  "version": "0.1.14",
-  "description": "n8n custom node for Alicloud Services (File Transcription & OSS Signed URL)",
+  "name": "n8n-nodes-alicloud",
+  "version": "0.1.15",
+  "description": "n8n custom node for Alicloud Services",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -14,17 +14,17 @@
     "signed-url"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription",
+  "homepage": "https://github.com/crazyyanchao/n8n-nodes-alicloud",
   "author": {
     "name": "Tony.Ma",
     "email": "yanchaoma@foxmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription.git"
+    "url": "https://github.com/crazyyanchao/n8n-nodes-alicloud.git"
   },
   "bugs": {
-    "url": "https://github.com/crazyyanchao/n8n-nodes-alicloud-file-transcription/issues"
+    "url": "https://github.com/crazyyanchao/n8n-nodes-alicloud/issues"
   },
   "engines": {
     "node": ">=22.16"
@@ -44,16 +44,14 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/AlicloudFileTranscriptionCredentialsApi.credentials.js",
       "dist/credentials/AlicloudCredentialsApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/AlicloudFileTranscription/AlicloudFileTranscription.node.js",
-      "dist/nodes/AlicloudOssSignedUrl/AlicloudOssSignedUrl.node.js",
       "dist/nodes/Alicloud/Alicloud.node.js"
     ]
   },
   "devDependencies": {
+    "@types/ali-oss": "^6.16.11",
     "@types/node": "^24.2.1",
     "@typescript-eslint/parser": "~8.36",
     "eslint": "^8.57.1",
@@ -64,11 +62,16 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3"
   },
-  "dependencies": {
-    "@alicloud/nls-filetrans-2018-08-17": "^1.0.0",
-    "ali-oss": "^6.23.0"
-  },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "@alicloud/ecs20140526": "^3.0.13",
+    "@alicloud/nls-filetrans-2018-08-17": "^1.0.0",
+    "@alicloud/openapi-client": "^0.4.13",
+    "@alicloud/pop-core": "^1.8.0",
+    "@alicloud/tea-typescript": "^1.8.0",
+    "@alicloud/tea-util": "^1.4.10",
+    "ali-oss": "^6.23.0"
   }
 }
