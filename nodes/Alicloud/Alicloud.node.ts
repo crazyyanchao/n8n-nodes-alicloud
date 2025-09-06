@@ -45,7 +45,7 @@ ModuleLoadUtils.loadModules(__dirname, 'resource/*.js').forEach((resource) => {
 /* -------------------------------------------------------------------
  * Node Implementation
  * ---------------------------------------------------------------- */
-class AlicloudNode implements INodeType {
+export class AlicloudNode implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Alicloud Services',
 		name: 'alicloud',
@@ -129,4 +129,4 @@ class AlicloudNode implements INodeType {
 	}
 }
 
-module.exports = AlicloudNode;
+
