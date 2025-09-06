@@ -6,7 +6,8 @@
 This is an n8n community node that allows you to use various Alibaba Cloud services in n8n workflows, including Intelligent Speech Service, Object Storage Service (OSS), and Elastic Compute Service (ECS).
 
 This node supports the following Alibaba Cloud services:
-- **Intelligent Speech Service**: Provides speech recognition capabilities, supporting file transcription for multiple audio formats
+- **Intelligent Speech Service**: Provides speech recognition and speech synthesis capabilities, supporting file transcription for multiple audio formats and text-to-speech conversion
+- **Speech Synthesis Service**: Convert text to natural speech with support for multiple voice types, audio formats and parameter adjustments
 - **Object Storage Service (OSS)**: Supports file upload, download, list, delete and other operations
 - **OSS Signed URL**: Generate temporary access links with support for multiple HTTP methods and custom parameters
 - **Elastic Compute Service (ECS)**: Manage cloud server instances
@@ -38,6 +39,14 @@ This node supports the following resource types and operations:
 - **Submit Task Only**: Only submit transcription task without waiting for results
 - **Query Results Only**: Query transcription results for already submitted tasks
 
+### Speech Synthesis Service
+- **Speech Synthesis**: Convert text to natural speech with support for multiple voice types and audio formats
+  - Support for multiple audio formats: PCM, WAV, MP3
+  - Multiple voice options (such as Xiaoyun)
+  - Adjustable parameters: volume, speech rate, pitch, etc.
+  - Support for subtitle timestamp functionality
+  - Multiple output formats: binary data, Base64 encoding, audio files, etc.
+
 ### Object Storage Service (OSS)
 - **Upload File**: Upload files to OSS storage bucket
 - **Download File**: Download files from OSS storage bucket
@@ -56,17 +65,17 @@ To use this node, you need:
 
 1. **Register Alibaba Cloud Account**: Visit [Alibaba Cloud official website](https://www.aliyun.com/) to register an account
 2. **Enable Related Services**: Enable the following services based on your usage needs:
-   - **Intelligent Speech Service**: For file transcription functionality
+   - **Intelligent Speech Service**: For file transcription and speech synthesis functionality
    - **Object Storage Service (OSS)**: For file storage and management
    - **Elastic Compute Service (ECS)**: For cloud server management
 3. **Obtain Access Keys**: Create AccessKey ID and AccessKey Secret in the RAM console
-4. **Obtain AppKey**: Get the project AppKey in the Intelligent Speech Service console (only required for file transcription)
+4. **Obtain AppKey**: Get the project AppKey in the Intelligent Speech Service console (required for file transcription and speech synthesis)
 5. **Configure Permissions**: Ensure the AccessKey has operation permissions for the corresponding services
 6. **Configure Credentials**: Configure Alibaba Cloud credentials in n8n
 
 ### Authentication Methods
-- **AccessKey Authentication**: Use Alibaba Cloud AccessKey ID and Secret for API calls (OSS, ECS, file transcription)
-- **AppKey Authentication**: Use the Intelligent Speech Service project AppKey (only required for file transcription)
+- **AccessKey Authentication**: Use Alibaba Cloud AccessKey ID and Secret for API calls (OSS, ECS, file transcription, speech synthesis)
+- **AppKey Authentication**: Use the Intelligent Speech Service project AppKey (required for file transcription and speech synthesis)
 
 ## Compatibility
 
@@ -86,7 +95,17 @@ To use this node, you need:
 
 ## Version History
 
-### v0.2.0 (Current Version)
+### v0.2.18 (Current Version)
+- **Added Speech Synthesis Service Support**
+  - Text-to-speech functionality with multiple voice options
+  - Support for multiple audio formats: PCM, WAV, MP3
+  - Rich parameter adjustments: volume, speech rate, pitch control
+  - Support for subtitle timestamp functionality
+  - Multiple output formats: binary data, Base64 encoding, audio files, etc.
+  - Automatic access token generation and management
+  - Complete error handling and logging
+
+### v0.2.0
 - **Added OSS Object Storage Service Support**
   - File upload functionality
   - File download functionality

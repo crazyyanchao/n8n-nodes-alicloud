@@ -286,7 +286,28 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 							sampleRate: sampleRate,
 						};
 					} else if (outputFormat === 'binary') {
-						result.audioData = fullAudioBuffer;
+						// Generate output binary property name and file name
+						const outputBinary = 'audio';
+						const outputFileName = `synthesized_audio.${format}`;
+						const fileSize = fullAudioBuffer.length;
+						const outputData = fullAudioBuffer;
+
+						// Return the structured object for binary output
+						resolve({
+							json: result,
+							binary: {
+								[outputBinary]: {
+									data: outputData.toString('base64'),
+									mimeType: `audio/${format}`,
+									fileName: outputFileName,
+									fileSize: fileSize.toString(),
+								},
+							},
+							pairedItem: {
+								item: index,
+							},
+						});
+						return;
 					} else if (outputFormat === 'file') {
 						// Save to file
 						const fs = require('fs');
