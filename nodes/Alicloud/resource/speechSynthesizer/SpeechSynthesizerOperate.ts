@@ -97,19 +97,7 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 		{
 			displayName: 'Voice',
 			name: 'voice',
-			type: 'options',
-			options: [
-				{ name: 'Aijia', value: 'aijia' },
-				{ name: 'Aijun', value: 'aijun' },
-				{ name: 'Aimei', value: 'aimei' },
-				{ name: 'Aiqi', value: 'aiqi' },
-				{ name: 'Aiqing', value: 'aiqing' },
-				{ name: 'Aitong', value: 'aitong' },
-				{ name: 'Aixia', value: 'aixia' },
-				{ name: 'Aiya', value: 'aiya' },
-				{ name: 'Aiyu', value: 'aiyu' },
-				{ name: 'Xiaoyun (Default)', value: 'xiaoyun' },
-			],
+			type: 'string',
 			default: 'xiaoyun',
 			description: 'Voice speaker for speech synthesis',
 		},
@@ -177,6 +165,7 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 			name: 'outputFormat',
 			type: 'options',
 			options: [
+				{ name: 'Binary Data', value: 'binary' },
 				{ name: 'Base64 Encoded Audio', value: 'base64' },
 				{ name: 'Audio Buffer Info', value: 'buffer' },
 				{ name: 'Audio File Path', value: 'file' },
@@ -296,6 +285,8 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 							type: format,
 							sampleRate: sampleRate,
 						};
+					} else if (outputFormat === 'binary') {
+						result.audioData = fullAudioBuffer;
 					} else if (outputFormat === 'file') {
 						// Save to file
 						const fs = require('fs');
