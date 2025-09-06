@@ -198,24 +198,49 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 		},
 	],
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
-		const serviceUrl = this.getNodeParameter('serviceUrl', index) as string;
-		const tokenEndpoint = this.getNodeParameter('tokenEndpoint', index) as string;
-		const apiVersion = this.getNodeParameter('apiVersion', index) as string;
-		const appKey = this.getNodeParameter('appKey', index) as string;
-		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
-			accessKeyId: string;
-			accessKeySecret: string;
-		};
-		const text = this.getNodeParameter('text', index) as string;
-		const voice = this.getNodeParameter('voice', index) as string;
-		const format = this.getNodeParameter('format', index) as string;
-		const sampleRate = this.getNodeParameter('sampleRate', index) as number;
-		const volume = this.getNodeParameter('volume', index) as number;
-		const speechRate = this.getNodeParameter('speechRate', index) as number;
-		const pitchRate = this.getNodeParameter('pitchRate', index) as number;
-		const enableSubtitle = this.getNodeParameter('enableSubtitle', index) as boolean;
-		const outputFormat = this.getNodeParameter('outputFormat', index) as string;
-		const outputFilePath = this.getNodeParameter('outputFilePath', index) as string;
+		// Get all required parameters with error handling
+		let serviceUrl: string;
+		let tokenEndpoint: string;
+		let apiVersion: string;
+		let appKey: string;
+		let credentials: { accessKeyId: string; accessKeySecret: string };
+		let text: string;
+		let voice: string;
+		let format: string;
+		let sampleRate: number;
+		let volume: number;
+		let speechRate: number;
+		let pitchRate: number;
+		let enableSubtitle: boolean;
+		let outputFormat: string;
+		let outputFilePath: string = '';
+
+		try {
+			serviceUrl = this.getNodeParameter('serviceUrl', index) as string;
+			tokenEndpoint = this.getNodeParameter('tokenEndpoint', index) as string;
+			apiVersion = this.getNodeParameter('apiVersion', index) as string;
+			appKey = this.getNodeParameter('appKey', index) as string;
+			credentials = await this.getCredentials('alicloudCredentialsApi') as {
+				accessKeyId: string;
+				accessKeySecret: string;
+			};
+			text = this.getNodeParameter('text', index) as string;
+			voice = this.getNodeParameter('voice', index) as string;
+			format = this.getNodeParameter('format', index) as string;
+			sampleRate = this.getNodeParameter('sampleRate', index) as number;
+			volume = this.getNodeParameter('volume', index) as number;
+			speechRate = this.getNodeParameter('speechRate', index) as number;
+			pitchRate = this.getNodeParameter('pitchRate', index) as number;
+			enableSubtitle = this.getNodeParameter('enableSubtitle', index) as boolean;
+			outputFormat = this.getNodeParameter('outputFormat', index) as string;
+
+			// Only get outputFilePath if outputFormat is 'file'
+			if (outputFormat === 'file') {
+				outputFilePath = this.getNodeParameter('outputFilePath', index) as string;
+			}
+		} catch (error) {
+			throw new Error(`Failed to get required parameters: ${error.message}`);
+		}
 
 		return new Promise(async (resolve, reject) => {
 			try {
