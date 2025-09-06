@@ -132,9 +132,16 @@ const OssSignedUrlGenerateOperate: ResourceOperations = {
 				...options,
 			});
 
+			// Generate internal URL by replacing region with internal region
+			const signedInternalUrl = signedUrl.replace(
+				new RegExp(`https://${ossBucket}\\.${ossRegion}\\.`),
+				`https://${ossBucket}.${ossRegion}-internal.`
+			);
+
 			return {
 				success: true,
 				signedUrl,
+				signedInternalUrl,
 				objectKey,
 				method: signedUrlMethod,
 				expires: signedUrlExpires,
