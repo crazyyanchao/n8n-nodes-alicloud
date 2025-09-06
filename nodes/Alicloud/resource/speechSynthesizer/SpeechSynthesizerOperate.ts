@@ -36,19 +36,6 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 	description: 'Convert text to speech using Alibaba Cloud Speech Synthesizer',
 	options: [
 		{
-			displayName: 'Credentials',
-			name: 'credentials',
-			type: 'options',
-			options: [
-				{
-					name: 'Alicloud Credentials API',
-					value: 'alicloudCredentialsApi',
-				},
-			],
-			default: 'alicloudCredentialsApi',
-			description: 'The credential that should be used for authentication',
-		},
-		{
 			displayName: 'Service URL',
 			name: 'serviceUrl',
 			type: 'string',
@@ -59,10 +46,8 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 		{
 			displayName: 'Token Endpoint',
 			name: 'tokenEndpoint',
+			// eslint-disable-next-line n8n-nodes-base/node-param-type-options-password-missing
 			type: 'string',
-			typeOptions: {
-				password: true,
-			},
 			default: 'https://nls-meta.cn-shanghai.aliyuncs.com',
 			description: 'Token generation endpoint URL',
 			required: true,
