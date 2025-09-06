@@ -16,7 +16,8 @@ const FileTranscriptionSubmitOperate: ResourceOperations = {
 				password: true,
 			},
 			default: '',
-			description: 'Intelligent Speech Service project AppKey (required for file transcription). You can also configure this in the Alicloud App Credentials API credential. Get it at: https://nls-portal.console.aliyun.com/applist.',
+			description: 'Intelligent Speech Service project AppKey (required for file transcription). Get it at: https://nls-portal.console.aliyun.com/applist.',
+			required: true,
 		},
 		{
 			displayName: 'File Transcription Endpoint',
@@ -113,22 +114,8 @@ const FileTranscriptionSubmitOperate: ResourceOperations = {
 			accessKeySecret: string;
 		};
 
-		// Get AppKey from credentials first, fallback to node parameters
-		let appKey: string;
-		try {
-			const appCredentials = await this.getCredentials('alicloudAppCredentialsApi') as {
-				fileTranscriptionAppKey: string;
-			};
-			appKey = appCredentials.fileTranscriptionAppKey;
-		} catch (error) {
-			// Fallback to node parameters if credentials not configured
-			appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
-		}
-
-		// Ensure AppKey is provided
-		if (!appKey) {
-			throw new Error('File Transcription AppKey is required. Please configure it either in the Alicloud App Credentials API credential or in the node parameters.');
-		}
+		// Get parameters from node parameters
+		const appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
 		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
 		const apiVersion = this.getNodeParameter('fileTranscriptionApiVersion', index) as string;
 

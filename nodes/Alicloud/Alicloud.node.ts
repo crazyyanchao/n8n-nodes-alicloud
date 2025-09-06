@@ -63,10 +63,6 @@ export class Alicloud implements INodeType {
 				name: 'alicloudCredentialsApi',
 				required: true,
 			},
-			{
-				name: 'alicloudAppCredentialsApi',
-				required: false,
-			},
 		],
 		properties: resourceBuilder.build(),
 	};
