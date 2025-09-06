@@ -2,6 +2,33 @@ import { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { ResourceOperations } from '../../../help/type/IResource';
 // @ts-ignore
 import Nls from 'alibabacloud-nls';
+import RPCClient from '@alicloud/pop-core';
+
+// Function to generate access token for Alibaba Cloud Speech Service
+async function generateAccessToken(accessKeyId: string, accessKeySecret: string, endpoint: string, apiVersion: string): Promise<string> {
+	const client = new RPCClient({
+		accessKeyId: accessKeyId,
+		accessKeySecret: accessKeySecret,
+		endpoint: endpoint,
+		apiVersion: apiVersion
+	});
+
+	try {
+		const result = await client.request('CreateToken', {});
+		if (result && typeof result === 'object' && 'Token' in result) {
+			const tokenResult = result as { Token: { Id: string }; Message?: string };
+			if (tokenResult.Token && tokenResult.Token.Id) {
+				return tokenResult.Token.Id;
+			} else {
+				throw new Error(`Failed to get access token: ${tokenResult.Message || 'Unknown error'}`);
+			}
+		} else {
+			throw new Error('Failed to get access token: Invalid response format');
+		}
+	} catch (error: any) {
+		throw new Error(`Token generation failed: ${error.message}`);
+	}
+}
 
 const SpeechSynthesizerOperate: ResourceOperations = {
 	name: 'Synthesize Speech',
@@ -9,11 +36,43 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 	description: 'Convert text to speech using Alibaba Cloud Speech Synthesizer',
 	options: [
 		{
+			displayName: 'Credentials',
+			name: 'credentials',
+			type: 'options',
+			options: [
+				{
+					name: 'Alicloud Credentials API',
+					value: 'alicloudCredentialsApi',
+				},
+			],
+			default: 'alicloudCredentialsApi',
+			description: 'The credential that should be used for authentication',
+		},
+		{
 			displayName: 'Service URL',
 			name: 'serviceUrl',
 			type: 'string',
 			default: 'wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1',
 			description: 'Speech synthesis service URL',
+			required: true,
+		},
+		{
+			displayName: 'Token Endpoint',
+			name: 'tokenEndpoint',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: 'https://nls-meta.cn-shanghai.aliyuncs.com',
+			description: 'Token generation endpoint URL',
+			required: true,
+		},
+		{
+			displayName: 'API Version',
+			name: 'apiVersion',
+			type: 'string',
+			default: '2019-02-28',
+			description: 'API version for token generation',
 			required: true,
 		},
 		{
@@ -24,18 +83,7 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 				password: true,
 			},
 			default: '',
-			description: 'Intelligent Speech Service project AppKey. Get it at: https://nls-portal.console.aliyun.com/applist',
-			required: true,
-		},
-		{
-			displayName: 'Access Token',
-			name: 'accessToken',
-			type: 'string',
-			typeOptions: {
-				password: true,
-			},
-			default: '',
-			description: 'Access token for authentication. Get it from: https://help.aliyun.com/document_detail/450514.html',
+			description: 'Intelligent Speech Service project AppKey. Get it at: https://nls-portal.console.aliyun.com/applist. Access token will be automatically generated using credentials.',
 			required: true,
 		},
 		{
@@ -51,16 +99,16 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 			name: 'voice',
 			type: 'options',
 			options: [
-				{ name: 'xiaoyun (default)', value: 'xiaoyun' },
-				{ name: 'aixia', value: 'aixia' },
-				{ name: 'aiqi', value: 'aiqi' },
-				{ name: 'aitong', value: 'aitong' },
-				{ name: 'aiya', value: 'aiya' },
-				{ name: 'aiyu', value: 'aiyu' },
-				{ name: 'aijia', value: 'aijia' },
-				{ name: 'aijun', value: 'aijun' },
-				{ name: 'aimei', value: 'aimei' },
-				{ name: 'aiqing', value: 'aiqing' },
+				{ name: 'Aijia', value: 'aijia' },
+				{ name: 'Aijun', value: 'aijun' },
+				{ name: 'Aimei', value: 'aimei' },
+				{ name: 'Aiqi', value: 'aiqi' },
+				{ name: 'Aiqing', value: 'aiqing' },
+				{ name: 'Aitong', value: 'aitong' },
+				{ name: 'Aixia', value: 'aixia' },
+				{ name: 'Aiya', value: 'aiya' },
+				{ name: 'Aiyu', value: 'aiyu' },
+				{ name: 'Xiaoyun (Default)', value: 'xiaoyun' },
 			],
 			default: 'xiaoyun',
 			description: 'Voice speaker for speech synthesis',
@@ -151,8 +199,13 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 	],
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
 		const serviceUrl = this.getNodeParameter('serviceUrl', index) as string;
+		const tokenEndpoint = this.getNodeParameter('tokenEndpoint', index) as string;
+		const apiVersion = this.getNodeParameter('apiVersion', index) as string;
 		const appKey = this.getNodeParameter('appKey', index) as string;
-		const accessToken = this.getNodeParameter('accessToken', index) as string;
+		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
+			accessKeyId: string;
+			accessKeySecret: string;
+		};
 		const text = this.getNodeParameter('text', index) as string;
 		const voice = this.getNodeParameter('voice', index) as string;
 		const format = this.getNodeParameter('format', index) as string;
@@ -164,8 +217,11 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 		const outputFormat = this.getNodeParameter('outputFormat', index) as string;
 		const outputFilePath = this.getNodeParameter('outputFilePath', index) as string;
 
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			try {
+				// Generate access token
+				const accessToken = await generateAccessToken(credentials.accessKeyId, credentials.accessKeySecret, tokenEndpoint, apiVersion);
+
 				// Create SpeechSynthesizer instance
 				const tts = new Nls.SpeechSynthesizer({
 					url: serviceUrl,
