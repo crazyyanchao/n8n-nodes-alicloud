@@ -1,12 +1,12 @@
 /*
  * ECS Module
  * =====================================================================
- * ECS 云服务器功能模块
+ * ECS Cloud Server Function Module
  * ---------------------------------------------------------------------
- * 支持操作：
- *   • 查询实例详情 (describeInstances)
+ * Supported Operations:
+ *   • Query instance details (describeInstances)
  * ---------------------------------------------------------------------
- * 作者：Yanchao Ma — 2025‑01‑06
+ * Author: Yanchao Ma — 2025‑01‑06
  */
 
 import { IExecuteFunctions, INodeExecutionData, NodeOperationError } from 'n8n-workflow';
@@ -46,13 +46,13 @@ export class EcsModule {
 		const operation = this.functions.getNodeParameter('ecsOperation', itemIndex) as string;
 		const region = this.functions.getNodeParameter('ecsRegion', itemIndex) as string;
 
-		// 创建客户端配置
+		// Create client configuration
 		const config = new Config({
 			accessKeyId: credentials.accessKeyId,
 			accessKeySecret: credentials.accessKeySecret,
 		});
 
-		// 设置 ECS 端点
+		// Set ECS endpoint
 		config.endpoint = `ecs.${region}.aliyuncs.com`;
 		const client = new Ecs20140526(config);
 		const runtime = new RuntimeOptions({});
@@ -65,7 +65,7 @@ export class EcsModule {
 	}
 
 	private async describeInstances(client: Ecs20140526, runtime: RuntimeOptions, itemIndex: number, region: string): Promise<INodeExecutionData> {
-		// 获取额外参数
+		// Get additional parameters
 		const additionalFields = this.functions.getNodeParameter('additionalFields', itemIndex) as EcsAdditionalFields;
 
 		const request = new DescribeInstancesRequest({
@@ -74,7 +74,7 @@ export class EcsModule {
 			pageNumber: additionalFields.pageNumber,
 		});
 
-		// 添加所有可选参数
+		// Add all optional parameters
 		if (additionalFields.instanceIds) {
 			try {
 				const instanceIds = JSON.parse(additionalFields.instanceIds);

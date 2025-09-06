@@ -1,14 +1,14 @@
 /*
  * File Transcription Module
  * =====================================================================
- * 文件转录功能模块
+ * File Transcription Function Module
  * ---------------------------------------------------------------------
- * 支持操作：
- *   • 提交转录任务 (submit)
- *   • 查询转录结果 (query)
- *   • 完整工作流 (complete)
+ * Supported Operations:
+ *   • Submit transcription task (submit)
+ *   • Query transcription result (query)
+ *   • Complete workflow (complete)
  * ---------------------------------------------------------------------
- * 作者：Yanchao Ma — 2025‑01‑06
+ * Author: Yanchao Ma — 2025‑01‑06
  */
 
 import { IExecuteFunctions, INodeExecutionData, NodeOperationError } from 'n8n-workflow';
@@ -35,11 +35,11 @@ export class FileTranscriptionModule {
 		const credentials = (await this.functions.getCredentials('alicloudCredentialsApi')) as FileTranscriptionCredentials;
 		const operation = this.functions.getNodeParameter('fileTranscriptionOperation', itemIndex) as string;
 
-		// 从节点参数获取配置
+		// Get configuration from node parameters
 		const endpoint = this.functions.getNodeParameter('fileTranscriptionEndpoint', itemIndex) as string;
 		const apiVersion = this.functions.getNodeParameter('fileTranscriptionApiVersion', itemIndex) as string;
 
-		// 创建阿里云文件转录客户端
+		// Create Alibaba Cloud file transcription client
 		const client = new Client({
 			accessKeyId: credentials.accessKeyId,
 			secretAccessKey: credentials.accessKeySecret,
@@ -150,7 +150,7 @@ export class FileTranscriptionModule {
 			};
 		}
 
-		// 提交任务
+		// Submit task
 		const taskParams = {
 			Task: JSON.stringify(task),
 		};
@@ -170,7 +170,7 @@ export class FileTranscriptionModule {
 
 		const taskId = submitResponse.TaskId;
 
-		// 轮询查询结果
+		// Poll query results
 		let pollCount = 0;
 		let finalResult: any = null;
 
@@ -189,13 +189,13 @@ export class FileTranscriptionModule {
 							clearInterval(pollTimer);
 							resolve(queryResponse);
 						} else if (queryResponse.StatusText === 'RUNNING' || queryResponse.StatusText === 'QUEUEING') {
-							// 继续轮询
+							// Continue polling
 							if (pollCount >= maxPollCount) {
 								clearInterval(pollTimer);
 								reject(new Error('Polling timeout: Maximum polling count reached'));
 							}
 						} else {
-							// 任务失败
+							// Task failed
 							clearInterval(pollTimer);
 							resolve(queryResponse);
 						}
@@ -205,7 +205,7 @@ export class FileTranscriptionModule {
 					}
 				}, pollInterval);
 
-				// 添加超时保护，防止无限等待
+				// Add timeout protection to prevent infinite waiting
 				setTimeout(() => {
 					clearInterval(pollTimer);
 					reject(new Error('Polling timeout: Maximum time exceeded'));
@@ -226,7 +226,7 @@ export class FileTranscriptionModule {
 			};
 		}
 
-		// 返回最终结果
+		// Return final result
 		return {
 			json: {
 				success: finalResult.StatusText === 'SUCCESS' || finalResult.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT',

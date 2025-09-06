@@ -1,12 +1,12 @@
 /*
  * OSS Signed URL Module
  * =====================================================================
- * OSS 签名 URL 生成功能模块
+ * OSS Signed URL Generation Function Module
  * ---------------------------------------------------------------------
- * 支持操作：
- *   • 生成签名 URL (generate)
+ * Supported Operations:
+ *   • Generate signed URL (generate)
  * ---------------------------------------------------------------------
- * 作者：Yanchao Ma — 2025‑01‑06
+ * Author: Yanchao Ma — 2025‑01‑06
  */
 
 import { IExecuteFunctions, INodeExecutionData, NodeOperationError } from 'n8n-workflow';
@@ -30,7 +30,7 @@ export class OssSignedUrlModule {
 	async execute(itemIndex: number): Promise<INodeExecutionData> {
 		const credentials = (await this.functions.getCredentials('alicloudCredentialsApi')) as OssSignedUrlCredentials;
 
-		// 从节点参数获取配置
+		// Get configuration from node parameters
 		const region = this.functions.getNodeParameter('ossRegion', itemIndex) as string;
 		const bucket = this.functions.getNodeParameter('ossBucket', itemIndex) as string;
 		const endpoint = this.functions.getNodeParameter('ossEndpoint', itemIndex) as string;
@@ -46,10 +46,10 @@ export class OssSignedUrlModule {
 			region: region,
 		});
 
-		// 解析额外选项
+		// Parse additional options
 		const options = this.parseAdditionalOptions(additionalOptions);
 
-		// 生成签名 URL
+		// Generate signed URL
 		const signedUrl = client.signatureUrl(objectKey, {
 			method,
 			expires,

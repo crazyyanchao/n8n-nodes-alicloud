@@ -1,15 +1,15 @@
 /*
  * OSS Module
  * =====================================================================
- * OSS 对象存储功能模块
+ * OSS Object Storage Function Module
  * ---------------------------------------------------------------------
- * 支持操作：
- *   • 上传文件 (upload)
- *   • 下载文件 (download)
- *   • 列出对象 (list)
- *   • 删除文件 (delete)
+ * Supported Operations:
+ *   • Upload file (upload)
+ *   • Download file (download)
+ *   • List objects (list)
+ *   • Delete file (delete)
  * ---------------------------------------------------------------------
- * 作者：Yanchao Ma — 2025‑01‑06
+ * Author: Yanchao Ma — 2025‑01‑06
  */
 
 import { IExecuteFunctions, INodeExecutionData, NodeOperationError } from 'n8n-workflow';
@@ -28,12 +28,12 @@ export class OssModule {
 		const credentials = (await this.functions.getCredentials('alicloudCredentialsApi')) as OssCredentials;
 		const operation = this.functions.getNodeParameter('ossOperation', itemIndex) as string;
 
-		// 从节点参数获取配置
+		// Get configuration from node parameters
 		const region = this.functions.getNodeParameter('ossRegion', itemIndex) as string;
 		const bucket = this.functions.getNodeParameter('ossBucket', itemIndex) as string;
 		const endpoint = this.functions.getNodeParameter('ossEndpoint', itemIndex) as string;
 
-		// 创建阿里云 OSS 客户端
+		// Create Alibaba Cloud OSS client
 		const client = new OSS({
 			region: region,
 			accessKeyId: credentials.accessKeyId,
@@ -97,7 +97,7 @@ export class OssModule {
 		const listRes = await client.list(
 			{
 				prefix,
-				'max-keys': 1000, // 默认为 1000，可自定义
+				'max-keys': 1000, // Default is 1000, customizable
 			},
 			{},
 		);
