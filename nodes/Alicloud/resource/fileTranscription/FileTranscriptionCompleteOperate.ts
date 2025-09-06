@@ -149,9 +149,13 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 		}
 
 		// 1. Submit task
-		const submitBody = {
+		const task = {
 			appkey: appKey,
 			...taskParams,
+		};
+
+		const submitBody = {
+			Task: JSON.stringify(task),
 		};
 
 		const submitResponse = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
