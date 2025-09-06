@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-alicloud",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "n8n custom node for Alicloud Services",
   "keywords": [
     "n8n-community-node-package",
@@ -44,7 +44,8 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/AlicloudCredentialsApi.credentials.js"
+      "dist/credentials/AlicloudCredentialsApi.credentials.js",
+      "dist/credentials/AlicloudAppCredentialsApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/Alicloud/Alicloud.node.js"
