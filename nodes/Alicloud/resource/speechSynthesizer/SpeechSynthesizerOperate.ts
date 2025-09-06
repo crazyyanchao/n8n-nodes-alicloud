@@ -155,7 +155,7 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 				{ name: 'Audio Buffer Info', value: 'buffer' },
 				{ name: 'Audio File Path', value: 'file' },
 			],
-			default: 'base64',
+			default: 'binary',
 			description: 'How to return the synthesized audio data',
 		},
 		{
