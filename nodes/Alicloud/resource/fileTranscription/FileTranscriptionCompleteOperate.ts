@@ -126,17 +126,19 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
 			accessKeyId: string;
 			accessKeySecret: string;
-			appKey: string;
-			endpoint: string;
-			apiVersion: string;
 		};
+
+		// Get parameters from node parameters
+		const appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
+		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
+		const apiVersion = this.getNodeParameter('fileTranscriptionApiVersion', index) as string;
 
 		// Create Alibaba Cloud file transcription client
 		const client = new Client({
 			accessKeyId: credentials.accessKeyId,
 			secretAccessKey: credentials.accessKeySecret,
-			endpoint: credentials.endpoint,
-			apiVersion: credentials.apiVersion,
+			endpoint: endpoint,
+			apiVersion: apiVersion,
 		});
 
 		const taskConfigMode = this.getNodeParameter('taskConfigMode', index) as string;
@@ -148,8 +150,8 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 		if (taskConfigMode === 'json') {
 			const taskJson = this.getNodeParameter('taskJson', index) as string;
 			task = JSON.parse(taskJson);
-			// Ensure appkey is set from credentials
-			task.appkey = credentials.appKey;
+			// Ensure appkey is set from node parameters
+			task.appkey = appKey;
 		} else {
 			const fileLink = this.getNodeParameter('fileLink', index) as string;
 			const version = this.getNodeParameter('version', index) as string;
@@ -157,7 +159,7 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 			const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', index) as boolean;
 
 			task = {
-				appkey: credentials.appKey,
+				appkey: appKey,
 				file_link: fileLink,
 				version: version,
 				enable_words: enableWords,

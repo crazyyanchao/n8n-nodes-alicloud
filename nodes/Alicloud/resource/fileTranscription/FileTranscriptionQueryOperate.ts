@@ -37,17 +37,18 @@ const FileTranscriptionQueryOperate: ResourceOperations = {
 		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
 			accessKeyId: string;
 			accessKeySecret: string;
-			appKey: string;
-			endpoint: string;
-			apiVersion: string;
 		};
+
+		// Get parameters from node parameters
+		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
+		const apiVersion = this.getNodeParameter('fileTranscriptionApiVersion', index) as string;
 
 		// Create Alibaba Cloud file transcription client
 		const client = new Client({
 			accessKeyId: credentials.accessKeyId,
 			secretAccessKey: credentials.accessKeySecret,
-			endpoint: credentials.endpoint,
-			apiVersion: credentials.apiVersion,
+			endpoint: endpoint,
+			apiVersion: apiVersion,
 		});
 
 		const taskId = this.getNodeParameter('taskId', index) as string;
