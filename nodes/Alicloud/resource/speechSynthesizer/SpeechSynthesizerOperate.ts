@@ -95,7 +95,7 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 				{ name: 'WAV', value: 'wav' },
 				{ name: 'MP3', value: 'mp3' },
 			],
-			default: 'pcm',
+			default: 'wav',
 			description: 'Audio encoding format',
 		},
 		{
