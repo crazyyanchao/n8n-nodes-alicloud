@@ -129,4 +129,4 @@ class AlicloudNode implements INodeType {
 	}
 }
 
-export default AlicloudNode;
+module.exports = AlicloudNode;
