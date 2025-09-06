@@ -235,8 +235,8 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 
 				// Set up event handlers
 				tts.on('meta', (msg: string) => {
-					// metaInfo = JSON.parse(msg);
-					metaInfo = msg;
+					metaInfo = JSON.parse(msg);
+					// metaInfo = msg;
 					this.logger.debug('Received meta info:', metaInfo);
 				});
 
