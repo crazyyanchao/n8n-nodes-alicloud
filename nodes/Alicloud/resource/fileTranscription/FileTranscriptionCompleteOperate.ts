@@ -1,6 +1,7 @@
 import { IDataObject, IExecuteFunctions, NodeOperationError } from 'n8n-workflow';
-import AlicloudRequestUtils from '../../utils/AlicloudRequestUtils';
 import { ResourceOperations } from '../../../help/type/IResource';
+// @ts-ignore
+import Client from '@alicloud/nls-filetrans-2018-08-17';
 
 const FileTranscriptionCompleteOperate: ResourceOperations = {
 	name: 'Complete Workflow',
@@ -122,83 +123,114 @@ const FileTranscriptionCompleteOperate: ResourceOperations = {
 		},
 	],
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
-		const appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
-		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
+		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
+			accessKeyId: string;
+			accessKeySecret: string;
+			appKey: string;
+			endpoint: string;
+			apiVersion: string;
+		};
+
+		// Create Alibaba Cloud file transcription client
+		const client = new Client({
+			accessKeyId: credentials.accessKeyId,
+			secretAccessKey: credentials.accessKeySecret,
+			endpoint: credentials.endpoint,
+			apiVersion: credentials.apiVersion,
+		});
+
 		const taskConfigMode = this.getNodeParameter('taskConfigMode', index) as string;
 		const pollInterval = this.getNodeParameter('pollInterval', index) as number;
 		const maxPollCount = this.getNodeParameter('maxPollCount', index) as number;
 
-		let taskParams: IDataObject;
+		let task: any;
 
 		if (taskConfigMode === 'json') {
 			const taskJson = this.getNodeParameter('taskJson', index) as string;
-			taskParams = JSON.parse(taskJson);
+			task = JSON.parse(taskJson);
+			// Ensure appkey is set from credentials
+			task.appkey = credentials.appKey;
 		} else {
 			const fileLink = this.getNodeParameter('fileLink', index) as string;
 			const version = this.getNodeParameter('version', index) as string;
 			const enableWords = this.getNodeParameter('enableWords', index) as boolean;
 			const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', index) as boolean;
 
-			taskParams = {
+			task = {
+				appkey: credentials.appKey,
 				file_link: fileLink,
-				version,
+				version: version,
 				enable_words: enableWords,
 				enable_sample_rate_adaptive: enableSampleRateAdaptive,
 			};
 		}
 
 		// 1. Submit task
-		const task = {
-			appkey: appKey,
-			...taskParams,
-		};
-
-		const submitBody = {
+		const taskParams = {
 			Task: JSON.stringify(task),
 		};
 
-		const submitResponse = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
-			method: 'POST',
-			url: `${endpoint}`,
-			body: submitBody,
-		});
+		const submitResponse = await client.submitTask(taskParams, { method: 'POST' });
 
-		if (!submitResponse.TaskId) {
+		if (submitResponse.StatusText !== 'SUCCESS') {
 			throw new NodeOperationError(this.getNode(), 'Failed to submit transcription task');
 		}
 
 		const taskId = submitResponse.TaskId;
 
-		// 2. Poll query results
+		// 2. Poll query results using Promise-based approach similar to official SDK
 		let pollCount = 0;
-		while (pollCount < maxPollCount) {
-			await new Promise(resolve => setTimeout(resolve, pollInterval));
+		let finalResult: any = null;
 
-			const queryResponse = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
-				method: 'GET',
-				url: `${endpoint}`,
-				qs: {
-					TaskId: taskId,
-				},
+		const pollForResult = async (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const pollTimer = setInterval(async () => {
+					try {
+						const taskIdParams = {
+							TaskId: taskId,
+						};
+
+						const queryResponse = await client.getTaskResult(taskIdParams);
+						pollCount++;
+
+						if (queryResponse.StatusText === 'SUCCESS' || queryResponse.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT') {
+							clearInterval(pollTimer);
+							resolve(queryResponse);
+						} else if (queryResponse.StatusText === 'RUNNING' || queryResponse.StatusText === 'QUEUEING') {
+							// Continue polling
+							if (pollCount >= maxPollCount) {
+								clearInterval(pollTimer);
+								reject(new Error('Polling timeout: Maximum polling count reached'));
+							}
+						} else {
+							// Task failed
+							clearInterval(pollTimer);
+							resolve(queryResponse);
+						}
+					} catch (error) {
+						clearInterval(pollTimer);
+						reject(error);
+					}
+				}, pollInterval);
 			});
+		};
 
-			if (queryResponse.StatusText === 'SUCCESS') {
-				return {
-					success: true,
-					taskId,
-					status: queryResponse.StatusText,
-					result: queryResponse.Result,
-					submitResponse,
-					queryResponse,
-				};
-			} else if (queryResponse.StatusText === 'FAIL') {
-				throw new NodeOperationError(this.getNode(), `Transcription task failed: ${queryResponse.StatusText}`);
-			}
-
-			pollCount++;
+		try {
+			finalResult = await pollForResult();
+		} catch (error) {
+			throw new NodeOperationError(this.getNode(), `Transcription task failed: ${(error as Error).message}`);
 		}
 
-		throw new NodeOperationError(this.getNode(), `Transcription task timeout, polled ${maxPollCount} times`);
+		// Return the final result
+		return {
+			success: finalResult.StatusText === 'SUCCESS' || finalResult.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT',
+			statusText: finalResult.StatusText,
+			taskId: taskId,
+			result: finalResult.Result,
+			pollCount: pollCount,
+			submitResponse: submitResponse,
+			queryResponse: finalResult
+		};
 	},
 };
 

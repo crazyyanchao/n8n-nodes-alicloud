@@ -1,6 +1,7 @@
 import { IDataObject, IExecuteFunctions } from 'n8n-workflow';
-import AlicloudRequestUtils from '../../utils/AlicloudRequestUtils';
 import { ResourceOperations } from '../../../help/type/IResource';
+// @ts-ignore
+import Client from '@alicloud/nls-filetrans-2018-08-17';
 
 const FileTranscriptionQueryOperate: ResourceOperations = {
 	name: 'Query Result',
@@ -33,23 +34,36 @@ const FileTranscriptionQueryOperate: ResourceOperations = {
 		},
 	],
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
-		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
-		const taskId = this.getNodeParameter('taskId', index) as string;
+		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
+			accessKeyId: string;
+			accessKeySecret: string;
+			appKey: string;
+			endpoint: string;
+			apiVersion: string;
+		};
 
-		const response = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
-			method: 'GET',
-			url: `${endpoint}`,
-			qs: {
-				TaskId: taskId,
-			},
+		// Create Alibaba Cloud file transcription client
+		const client = new Client({
+			accessKeyId: credentials.accessKeyId,
+			secretAccessKey: credentials.accessKeySecret,
+			endpoint: credentials.endpoint,
+			apiVersion: credentials.apiVersion,
 		});
 
+		const taskId = this.getNodeParameter('taskId', index) as string;
+
+		const taskIdParams = {
+			TaskId: taskId,
+		};
+
+		const response = await client.getTaskResult(taskIdParams);
+
 		return {
-			success: true,
-			taskId,
-			status: response.StatusText,
+			success: response.StatusText === 'SUCCESS' || response.StatusText === 'SUCCESS_WITH_NO_VALID_FRAGMENT',
+			statusText: response.StatusText,
+			taskId: taskId,
 			result: response.Result,
-			response,
+			response: response
 		};
 	},
 };

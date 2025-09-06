@@ -1,6 +1,7 @@
 import { IDataObject, IExecuteFunctions } from 'n8n-workflow';
-import AlicloudRequestUtils from '../../utils/AlicloudRequestUtils';
 import { ResourceOperations } from '../../../help/type/IResource';
+// @ts-ignore
+import Client from '@alicloud/nls-filetrans-2018-08-17';
 
 const FileTranscriptionSubmitOperate: ResourceOperations = {
 	name: 'Submit Task',
@@ -108,49 +109,57 @@ const FileTranscriptionSubmitOperate: ResourceOperations = {
 		},
 	],
 	async call(this: IExecuteFunctions, index: number): Promise<IDataObject> {
-		const appKey = this.getNodeParameter('fileTranscriptionAppKey', index) as string;
-		const endpoint = this.getNodeParameter('fileTranscriptionEndpoint', index) as string;
+		const credentials = await this.getCredentials('alicloudCredentialsApi') as {
+			accessKeyId: string;
+			accessKeySecret: string;
+			appKey: string;
+			endpoint: string;
+			apiVersion: string;
+		};
+
+		// Create Alibaba Cloud file transcription client
+		const client = new Client({
+			accessKeyId: credentials.accessKeyId,
+			secretAccessKey: credentials.accessKeySecret,
+			endpoint: credentials.endpoint,
+			apiVersion: credentials.apiVersion,
+		});
+
 		const taskConfigMode = this.getNodeParameter('taskConfigMode', index) as string;
 
-		let taskParams: IDataObject;
+		let task: any;
 
 		if (taskConfigMode === 'json') {
 			const taskJson = this.getNodeParameter('taskJson', index) as string;
-			taskParams = JSON.parse(taskJson);
+			task = JSON.parse(taskJson);
+			// Ensure appkey is set from credentials
+			task.appkey = credentials.appKey;
 		} else {
 			const fileLink = this.getNodeParameter('fileLink', index) as string;
 			const version = this.getNodeParameter('version', index) as string;
 			const enableWords = this.getNodeParameter('enableWords', index) as boolean;
 			const enableSampleRateAdaptive = this.getNodeParameter('enableSampleRateAdaptive', index) as boolean;
 
-			taskParams = {
+			task = {
+				appkey: credentials.appKey,
 				file_link: fileLink,
-				version,
+				version: version,
 				enable_words: enableWords,
 				enable_sample_rate_adaptive: enableSampleRateAdaptive,
 			};
 		}
 
-		const task = {
-			appkey: appKey,
-			...taskParams,
-		};
-
-		const submitBody = {
+		const taskParams = {
 			Task: JSON.stringify(task),
 		};
 
-		const response = await AlicloudRequestUtils.fileTranscriptionRequest.call(this, {
-			method: 'POST',
-			url: `${endpoint}`,
-			body: submitBody,
-		});
+		const response = await client.submitTask(taskParams, { method: 'POST' });
 
 		return {
-			success: true,
+			success: response.StatusText === 'SUCCESS',
+			statusText: response.StatusText,
 			taskId: response.TaskId,
-			status: response.StatusText,
-			response,
+			response: response
 		};
 	},
 };
