@@ -23,13 +23,6 @@ const OssDeleteOperate: ResourceOperations = {
 			required: true,
 		},
 		{
-			displayName: 'OSS Custom Endpoint',
-			name: 'ossEndpoint',
-			type: 'string',
-			default: '',
-			description: 'Optional custom OSS endpoint URL (overrides region-based endpoint)',
-		},
-		{
 			displayName: 'Object Key',
 			name: 'objectKey',
 			type: 'string',

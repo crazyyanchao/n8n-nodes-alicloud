@@ -23,13 +23,6 @@ const OssListOperate: ResourceOperations = {
 			required: true,
 		},
 		{
-			displayName: 'OSS Custom Endpoint',
-			name: 'ossEndpoint',
-			type: 'string',
-			default: '',
-			description: 'Optional custom OSS endpoint URL (overrides region-based endpoint)',
-		},
-		{
 			displayName: 'Prefix',
 			name: 'prefix',
 			type: 'string',
