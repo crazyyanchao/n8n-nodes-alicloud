@@ -297,8 +297,25 @@ const SpeechSynthesizerOperate: ResourceOperations = {
 					} else if (outputFormat === 'file') {
 						// Save to file
 						const fs = require('fs');
-						fs.writeFileSync(outputFilePath, fullAudioBuffer);
-						result.filePath = outputFilePath;
+						const path = require('path');
+
+						try {
+							// Ensure directory exists
+							const dir = path.dirname(outputFilePath);
+							if (!fs.existsSync(dir)) {
+								fs.mkdirSync(dir, { recursive: true });
+							}
+
+							// Write file
+							fs.writeFileSync(outputFilePath, fullAudioBuffer);
+							result.filePath = outputFilePath;
+						} catch (fileError) {
+							this.logger.error('Failed to save audio file', {
+								filePath: outputFilePath,
+								error: fileError.message
+							});
+							throw new Error(`Failed to save audio file: ${fileError.message}`);
+						}
 					}
 
 					resolve(result);
